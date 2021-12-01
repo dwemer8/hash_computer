@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Wed Dec  1 15:07:46 2021
--- Last update : Wed Dec  1 23:02:40 2021
+-- Last update : Thu Dec  2 00:05:38 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -93,7 +93,9 @@ begin
 		Rx <= '1';
 		wait for uart_period;
 
-		wait for uart_period*5;
+		if (rx_data /= data_in) then
+		 	assert false report "Failure 1" severity failure;
+		end if;
 
 		data_in <= "00001111";
 		Rx <= '0';
@@ -105,8 +107,11 @@ begin
 		Rx <= '1';
 		wait for uart_period;
 
-		wait for uart_period*10;
-		assert false report "End" severity failure;
+		if (rx_data /= data_in) then
+		 	assert false report "Failure 2" severity failure;
+		end if;
+
+		assert false report "Success" severity failure;
 
 		wait;
 	end process;

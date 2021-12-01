@@ -50,15 +50,15 @@ architecture Behavioral of UART_rx is
     type state_type is (idle, start, data, stop);
     type rec_type is record
         state: state_type;
-        rx_i: std_logic;
-        rxBusy: std_logic;
-        rxData: std_logic_vector (BYTE_SIZE - 1 downto 0);
+        rx_busy: std_logic;
+        rx_data: std_logic_vector (BYTE_SIZE - 1 downto 0);
+        rx_error : std_logic;
         cntBit : integer;
         cntIn : integer;
-        rxError : std_logic;
     end record;
     
-    constant rstRec : rec_type := (idle, '1', '0', (others => '0'), 0, 0, '0');
+    constant uart_period_in_clocks : integer := FREQUENCY * 1_000_000 / BAUDRATE;
+    constant rstRec : rec_type := (idle, '0', (others => '0'), '0', 0, 0);
     signal prevRec, nextRec: rec_type := rstRec;
     
 begin
@@ -74,78 +74,71 @@ begin
         end if;
     end process;
     
-    process (prevRec, Rx_i, rst_i)
+    process (prevRec, rx_i, rst_i)
+        variable var : rec_type := rstRec;
     begin
-        if (prevRec.state = idle) then
-            if (rx_i = '1') then
-                nextRec.state <= idle;
-                nextRec.rx_i<= Rx_i;
-                nextRec.rxBusy <= '0';
-                nextRec.rxData <= (others => '0');
-                nextRec.cntBit <= 0;
-                nextRec.cntIn <= 0;
-                nextRec.rxError <= '0'; 
-            else
-                nextRec.state <= start;
-                nextRec.rx_i<= Rx_i;
-                nextRec.rxBusy <= '1';
-                nextRec.rxData <= (others => '0');
-                nextRec.cntBit <= 0;
-                nextRec.cntIn <= FREQUENCY*1000000/BAUDRATE/2;
-                nextRec.rxError <= '0';
+        var := prevRec;
+
+        case (prevRec.state) is
+        when idle =>
+            if (rx_i = '0') then
+                var.state := start;
+                var.rx_busy := '1';
+                var.cntIn := uart_period_in_clocks/2 - 1;
+                var.rx_error := '0';
             end if;
-        elsif (prevRec.state = start) then
-            nextRec <= prevRec;
+
+        when start =>
             if (prevRec.cntIn /= 0) then
-                nextRec.cntIn <= prevRec.cntIn - 1;
+                var.cntIn := prevRec.cntIn - 1;
+
             else
-                if (rx_i= '0') then
-                    nextRec.state <= data;
-                    nextRec.rx_i<= Rx_i;
-                    nextRec.rxBusy <= '1';
-                    nextRec.rxData <= (others => '0');
-                    nextRec.cntBit <= 0;
-                    nextRec.cntIn <= FREQUENCY*1000000/BAUDRATE - 1;
+                --data stream started
+                if (rx_i = '0') then
+                    var.state := data;
+                    var.cntIn := uart_period_in_clocks - 1;
+
+                --noise happened
                 else
-                    nextRec.state <= idle;
-                    nextRec.rx_i<= Rx_i;
-                    nextRec.rxBusy <= '0';
-                    nextRec.rxData <= (others => '0');
-                    nextRec.cntBit <= 0;
-                    nextRec.cntIn <= 0;
+                    var.state := idle;
+                    var.rx_busy := '0';
                 end if;
             end if;
-        elsif (prevRec.state = data) then
-            nextRec <= prevRec;
+
+        when data =>
             if (prevRec.cntIn /= 0) then
-                nextRec.cntIn <= prevRec.cntIn - 1;
+                var.cntIn := prevRec.cntIn - 1;
+
             else
+                var.cntIn := uart_period_in_clocks - 1;
+                var.rx_data(prevRec.cntBit) := rx_i;
+
                 if (prevRec.cntBit /= BYTE_SIZE - 1) then
-                    nextRec.cntBit <= prevRec.cntBit + 1;
-                    nextRec.cntIn <= FREQUENCY*1000000/BAUDRATE - 1;
-                    nextRec.rxData(prevRec.cntBit) <= Rx_i;
+                    var.cntBit := prevRec.cntBit + 1;
+
                 else 
-                    nextRec.state <= stop;
-                    nextRec.cntBit <= 0;
-                    nextRec.cntIn <= FREQUENCY*1000000/BAUDRATE - 1;
-                    nextRec.rxData(prevRec.cntBit) <= Rx_i;
+                    var.cntBit := 0;
+                    var.state := stop;
                 end if;
             end if;
-        elsif (prevRec.state = stop) then
-            nextRec <= prevRec;
+            
+        when stop =>
             if (prevRec.cntIn /= 0) then
-                nextRec.cntIn <= prevRec.cntIn - 1;
+                var.cntIn := prevRec.cntIn - 1;
+
             else
-                nextRec.rxBusy <= '0';
-                rx_data_o <= prevRec.rxData;
-                nextRec.state <= idle;
-                if (rx_i/= '1') then
-                    nextRec.rxError <= '1';
+                var.rx_busy := '0';
+                var.state := idle;
+                if (rx_i /= '1') then
+                    var.rx_error := '1';
                 end if;
             end if;
-        end if;
+        end case;
+
+        nextRec <= var;
     end process;
 
-    rx_busy_o <= nextRec.rxBusy; 
-    rx_error_o <= nextRec.rxError; 
+    rx_data_o <= nextRec.rx_data;
+    rx_busy_o <= nextRec.rx_busy; 
+    rx_error_o <= nextRec.rx_error; 
 end Behavioral;
