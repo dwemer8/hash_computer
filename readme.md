@@ -1,14 +1,17 @@
-##Tasks:
+**To do**:
 
-0 uart_tx & uart_rx
-0 fifo/memory
-0 crc32
-0 sha-1
-0 sha-2
-0 lcd
-0 top-module
-	0 button debouncer
+* fifo/memory
+* crc32
+* sha-1
+* sha-2
+* lcd
+* top-module
+	* button debouncer
 
-##Important directories:
+**Done**:
 
-sources - code files
+* uart_tx & uart_rx
+
+**Important directories**:
+
+* sources - code files
