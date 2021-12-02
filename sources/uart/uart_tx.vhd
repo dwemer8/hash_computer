@@ -57,18 +57,14 @@ architecture Behavioral of UART_tx is
         data_reg : std_logic_vector (BYTE_SIZE - 1 downto 0);
     end record;
     
-    signal rnext, rprev : rec_type := (idle, '0', '1', 0, 0, (others => '0'));
+    constant rstRec : rec_type := (idle, '0', '1', 0, 0, (others => '0'));
+    signal rnext, rprev : rec_type := rstRec;
 begin
     process (clk_i)
     begin
         if (rising_edge(clk_i)) then
             if (rst_i = '1') then
-                rprev.state <= idle;
-                rprev.tx_busy_o <= '0';
-                rprev.tx_o <= '1';
-                rprev.cnt_bit <= 0;
-                rprev.cnt_out <= 0;
-                rprev.data_reg <= (others => '0');
+                rprev <= rstRec;
             else
                 rprev <= rnext;
             end if;
