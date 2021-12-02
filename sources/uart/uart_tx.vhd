@@ -52,12 +52,14 @@ architecture Behavioral of UART_tx is
         state : state_type;
         tx_busy_o : std_logic;
         tx_o : std_logic;
+        Tx_load_i : std_logic;
         cnt_bit : integer;
         cnt_out : integer;
         data_reg : std_logic_vector (BYTE_SIZE - 1 downto 0);
     end record;
     
-    constant rstRec : rec_type := (idle, '0', '1', 0, 0, (others => '0'));
+    constant uart_period_in_clocks : integer := FREQUENCY * 1_000_000 / BAUDRATE;
+    constant rstRec : rec_type := (idle, '0', '1', '0', 0, 0, (others => '0'));
     signal rnext, rprev : rec_type := rstRec;
 begin
     process (clk_i)
@@ -72,55 +74,61 @@ begin
     end process;
     
     process (rprev, Tx_load_i, Tx_data_i)
+        variable var : rec_type := rstRec;
     begin
-        if (rprev.state = idle) then
-            rnext.state <= idle;
-            rnext.tx_busy_o <= '0';
-            rnext.tx_o <= '1';
-            rnext.cnt_bit <= 0;
-            rnext.cnt_out <= 0;
-            rnext.data_reg <= (others => '0');
-            if (Tx_load_i = '1') then
-                rnext.state <= start;
-                rnext.cnt_out <= FREQUENCY*1000000/BAUDRATE - 1;
-                rnext.tx_busy_o <= '1';
-                rnext.data_reg <= Tx_data_i;
+        var := rprev;
+        var.Tx_load_i := Tx_load_i;
+
+        case (rprev.state) is
+        when idle =>
+            if (Tx_load_i = '1' and rprev.Tx_load_i = '0') then
+                var.state := start;
+                var.cnt_out := uart_period_in_clocks - 1;
+                var.tx_busy_o := '1';
+                var.data_reg := Tx_data_i;
             end if;
-        elsif (rprev.state = start) then
-            rnext <= rprev;
-            rnext.tx_o <= '0';
+
+        when start =>
+            var.tx_o := '0';
             if (rprev.cnt_out /= 0) then
-                rnext.cnt_out <= rprev.cnt_out - 1;
+                var.cnt_out := rprev.cnt_out - 1;
+
             else
-                rnext.state <= data;
-                rnext.cnt_bit <= 0;
-                rnext.cnt_out <= FREQUENCY*1000000/BAUDRATE - 1;
+                var.state := data;
+                var.cnt_out := uart_period_in_clocks - 1;
             end if;
-        elsif (rprev.state = data) then
-            rnext <= rprev;
-            rnext.tx_o <= rprev.data_reg(rprev.cnt_bit);
+
+        when data =>
+            var.tx_o := rprev.data_reg(rprev.cnt_bit);
             if (rprev.cnt_out /= 0) then
-                rnext.cnt_out <= rprev.cnt_out - 1;
+                var.cnt_out := rprev.cnt_out - 1;
+
             else
                 if (rprev.cnt_bit /= BYTE_SIZE - 1) then
-                    rnext.cnt_out <= FREQUENCY*1000000/BAUDRATE - 1;
-                    rnext.cnt_bit <= rprev.cnt_bit + 1;
+                    var.cnt_out := uart_period_in_clocks - 1;
+                    var.cnt_bit := rprev.cnt_bit + 1;
+
                 else
-                    rnext.cnt_out <= FREQUENCY*1000000/BAUDRATE - 1;
-                    rnext.state <= stop;
+                    var.cnt_out := uart_period_in_clocks - 1;
+                    var.cnt_bit := 0;
+                    var.state := stop;
                 end if;
             end if;
-        else
-            rnext <= rprev;
-            rnext.tx_o <= '1';
+
+        when stop =>
+            var.tx_o := '1';
             if (rprev.cnt_out /= 0) then
-                rnext.cnt_out <= rprev.cnt_out - 1;
+                var.cnt_out := rprev.cnt_out - 1;
+
             else
-                rnext.state <= idle;
-                rnext.tx_busy_o <= '0';
+                var.state := idle;
+                var.tx_busy_o := '0';
             end if;
-        end if;
+        end case;
+
+        rnext <= var;
     end process;
-    Tx_o <= rprev.tx_o; 
-    Tx_busy_o <= rprev.tx_busy_o;
+
+    Tx_o <= rnext.tx_o; 
+    Tx_busy_o <= rnext.tx_busy_o;
 end Behavioral;

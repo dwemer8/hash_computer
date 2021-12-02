@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu Dec  2 10:15:01 2021
--- Last update : Thu Dec  2 23:07:46 2021
+-- Last update : Thu Dec  2 23:30:21 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -87,9 +87,8 @@ begin
 
 		Tx_data_i <= "01010101";
 		Tx_load_i <= '1';
-		wait for clk_period;
-		Tx_load_i <= '0';
 		wait until Tx_o = '0';
+		Tx_load_i <= '0';
 		wait for uart_period*3/2;
 		for i in 0 to data_out'length - 1 loop
 			data_out(i) <= Tx_o;
@@ -107,9 +106,8 @@ begin
 
 		Tx_data_i <= "00001111";
 		Tx_load_i <= '1';
-		wait for clk_period;
-		Tx_load_i <= '0';
 		wait until Tx_o = '0';
+		Tx_load_i <= '0';
 		wait for uart_period*3/2;
 		for i in 0 to data_out'length - 1 loop
 			data_out(i) <= Tx_o;
