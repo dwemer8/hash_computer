@@ -9,6 +9,4 @@
 	0 button debouncer
 
 **Important directories:**
-docs - documents reated to project
 sources - code files
-sources/any_directory/simulation - files for simulation in Active-HDL
