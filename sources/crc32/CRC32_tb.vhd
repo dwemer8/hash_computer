@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Sat Dec  4 17:04:36 2021
--- Last update : Sun Dec  5 14:10:16 2021
+-- Last update : Sun Dec  5 19:20:46 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -22,80 +22,83 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use std.textio.all;
-use ieee.std_logic_textio.all;
 
 -----------------------------------------------------------
 
-entity CRC32_Core_tb is
+entity CRC32_tb is
 
-end entity CRC32_Core_tb;
+end entity CRC32_tb;
 
 -----------------------------------------------------------
 
-architecture testbench of CRC32_Core_tb is
+architecture testbench of CRC32_tb is
 
-	component CRC32_Core is
-		port (
-			Clock   : in  STD_LOGIC;
-			Reset   : in  STD_LOGIC;
-			Data_In : in  STD_LOGIC;
-			CRC32   : out STD_LOGIC_VECTOR (31 downto 0)
+	component CRC32 is
+		generic (
+			INIT   : STD_LOGIC_VECTOR (31 downto 0);
+			XOROUT : STD_LOGIC_VECTOR (31 downto 0)
 		);
-	end component;	
+		port (
+			clk_i        : in  STD_LOGIC;
+			rst_i        : in  STD_LOGIC;
+			data_i       : in  STD_LOGIC;
+			data_valid_i : in  STD_LOGIC;
+			checksum_o   : out STD_LOGIC_VECTOR (31 downto 0)
+		);
+	end component;
 
 	-- Testbench DUT generics
 
 
 	-- Testbench DUT ports
-	signal Clock   : STD_LOGIC := '1';
-	signal Reset   : STD_LOGIC := '1';
-	signal Data_In : STD_LOGIC := '0';
-	signal CRC32   : STD_LOGIC_VECTOR (31 downto 0);
+	signal clk_i        : STD_LOGIC := '1';
+	signal rst_i        : STD_LOGIC := '1';
+	signal data_i       : STD_LOGIC := '0';
+	signal checksum_o   : STD_LOGIC_VECTOR (31 downto 0);
+	signal data_valid_i : std_logic := '0';
 
 	signal s_j : integer := 10;
 	signal s_i : integer := 10;
-	signal s_character_buf : std_logic_vector(7 downto 0) := (others => '0');
-	signal s_result : std_logic_vector(31 downto 0) := (others => '0');
 
 	-- Other constants
 	constant clk_period : time := 20 ns; -- NS
+	constant rst_delay  : time := clk_period*10;
 
 begin
 	-----------------------------------------------------------
-	-- Clocks and Reset
+	-- clk_i and rst_i
 	-----------------------------------------------------------
-	Clock <= not Clock after clk_period/2;
+	clk_i <= not clk_i after clk_period/2;
+	rst_i <= '0' after rst_delay;
 
 	-----------------------------------------------------------
 	-- Testbench Stimulus
 	-----------------------------------------------------------
-	--CRC-32/BZIP2
-	s_result <= x"FFFFFFFF" xor CRC32;
-
 	process
 		variable character_buf : std_logic_vector(7 downto 0) := (others => '0');
 
 	begin
-		wait for clk_period*10;
+		wait for rst_delay + clk_period;
 
-		Reset <= '0';
-		send_loop : for i in 1 to 9 loop 
-			s_i <= i;
-			character_buf := std_logic_vector(to_unsigned(48 + i, 8));
-			s_character_buf <= character_buf;
-			bit_loop : for j in 7 downto 0 loop	
-				s_j <= j;
-				Data_In <= character_buf(j); --charcter'pos("0") = 48
+		--loading of "123456789"
+		data_valid_i <= '1';
+		send_loop : for i in 1 to 9 loop
+			s_i           <= i;
+			character_buf := std_logic_vector(to_unsigned(48 + i, 8)); --charcter'pos("0") = 48
+			
+			bit_loop : for j in 7 downto 0 loop
+				s_j    <= j;
+				data_i <= character_buf(j);
 				wait for clk_period;
 			end loop bit_loop;
 		end loop;
+		data_valid_i <= '0';
 
-		-- FC891918 - check for 123456789 string
-		assert s_result = x"FC891918" report "FAILURE" severity failure;
+		wait for clk_period*3;
+		-- FC891918 - checksum for 123456789 string
+		assert checksum_o = x"FC891918" report "FAILURE" severity failure;
 		assert false report "SUCCESS" severity failure;
 
-		Reset <= '1';
 		wait;
 
 	end process;
@@ -103,12 +106,18 @@ begin
 	-----------------------------------------------------------
 	-- Entity Under Test
 	-----------------------------------------------------------
-	DUT : CRC32_Core
+	DUT : CRC32
+		generic map (
+			--CRC-32/BZIP2
+			INIT   => x"FFFFFFFF",
+			XOROUT => x"FFFFFFFF"
+		)
 		port map (
-			Clock   => Clock,
-			Reset   => Reset,
-			Data_In => Data_In,
-			CRC32   => CRC32
+			clk_i        => clk_i,
+			rst_i        => rst_i,
+			data_i       => data_i,
+			data_valid_i => data_valid_i,
+			checksum_o   => checksum_o
 		);
 
 end architecture testbench;
