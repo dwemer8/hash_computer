@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Sat Dec  4 17:04:36 2021
--- Last update : Sun Dec  5 13:41:52 2021
+-- Last update : Sun Dec  5 14:10:16 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -76,18 +76,10 @@ begin
 	process
 		variable character_buf : std_logic_vector(7 downto 0) := (others => '0');
 
-		function to_slv(
-			symb : character
-		) return std_logic_vector is
-		begin
-			return std_logic_vector(to_unsigned(character'pos(symb), 8));
-		end to_slv;
-
 	begin
 		wait for clk_period*10;
 
 		Reset <= '0';
-
 		send_loop : for i in 1 to 9 loop 
 			s_i <= i;
 			character_buf := std_logic_vector(to_unsigned(48 + i, 8));
@@ -99,15 +91,13 @@ begin
 			end loop bit_loop;
 		end loop;
 
-		--padding_loop: for i in 1 to 32 loop
-		--	s_i <= i;
-		--	Data_In <= '1';
-		--	wait for clk_period;
-		--end loop;
+		-- FC891918 - check for 123456789 string
+		assert s_result = x"FC891918" report "FAILURE" severity failure;
+		assert false report "SUCCESS" severity failure;
 
 		Reset <= '1';
-
 		wait;
+
 	end process;
 
 	-----------------------------------------------------------
