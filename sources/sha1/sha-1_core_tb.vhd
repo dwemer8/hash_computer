@@ -1,0 +1,116 @@
+--------------------------------------------------------------------------------
+-- Title       : <Title Block>
+-- Project     : Default Project Name
+--------------------------------------------------------------------------------
+-- File        : SHA1_core_tb.vhd
+-- Author      : User Name <user.email@user.company.com>
+-- Company     : User Company Name
+-- Created     : Mon Dec 13 15:31:22 2021
+-- Last update : Mon Dec 13 19:07:00 2021
+-- Platform    : Default Part Number
+-- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
+--------------------------------------------------------------------------------
+-- Copyright (c) 2021 User Company Name
+-------------------------------------------------------------------------------
+-- Description: 
+--------------------------------------------------------------------------------
+-- Revisions:  Revisions and documentation are controlled by
+-- the revision control system (RCS).  The RCS should be consulted
+-- on revision history.
+-------------------------------------------------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+library work;
+use work.sha1_pkg.all;
+
+-----------------------------------------------------------
+
+entity SHA1_core_tb is
+
+end entity SHA1_core_tb;
+
+-----------------------------------------------------------
+
+architecture testbench of SHA1_core_tb is
+
+	-- Testbench DUT generics
+	component SHA1_core is
+		port (
+			clk_i       : in  std_logic;
+			rst_i       : in  std_logic;
+			msg_block_i : in  std_logic_vector(511 downto 0);
+			start_i     : in  std_logic;
+			digest_o    : out std_logic_vector(159 downto 0);
+			ready_o     : out std_logic
+		);
+	end component;	
+
+	-- Testbench DUT ports
+	signal clk_i       : std_logic := '1';
+	signal rst_i       : std_logic := '1';
+	signal msg_block_i : std_logic_vector(511 downto 0) := (others => '0');
+	signal start_i     : std_logic := '0';
+	signal digest_o    : std_logic_vector(159 downto 0);
+	signal ready_o     : std_logic;
+
+	-- Other constants
+	constant clk_period : time := 20 ns; -- NS
+
+	function strToMsg (
+		msg: string
+		) return std_logic_vector is
+		variable msg_block : std_logic_vector(511 downto 0) := (others => '0');
+	begin
+		split_loop : for i in 0 to msg'length - 1 loop
+			msg_block(512 - 1 - i*8 downto 512 - 8 - i*8) := slv(to_unsigned(character'pos(msg(i + 1)), 8));
+		end loop;
+		msg_block(512 - msg'length*8 - 1) := '1';
+		msg_block(63 downto 0) := slv(to_unsigned(msg'length, 64));
+		return msg_block;
+	end strToMsg;
+
+begin
+	-----------------------------------------------------------
+	-- Clocks
+	-----------------------------------------------------------
+	clk_i <= not clk_i after clk_period/2;
+
+	-----------------------------------------------------------
+	-- Testbench Stimulus
+	-----------------------------------------------------------
+	stim: process
+	begin
+		rst_i <= '1';
+		wait for clk_period;
+
+		rst_i <= '0';
+		msg_block_i <= strToMsg("The quick brown fox jumps over the lazy dog");
+		start_i <= '1';
+		wait for clk_period;
+		start_i <= '0';
+
+		wait until ready_o = '1';
+		wait for clk_period/2;
+		assert digest_o = x"2fd4e1c67a2d28fced849ee1bb76e7391b93eb12" report "Fail" severity failure;
+
+		assert false report "Success" severity failure;
+		wait;
+	end process;
+
+	-----------------------------------------------------------
+	-- Entity Under Test
+	-----------------------------------------------------------
+	DUT : SHA1_core
+		port map (
+			clk_i       => clk_i,
+			rst_i       => rst_i,
+			msg_block_i => msg_block_i,
+			start_i     => start_i,
+			digest_o    => digest_o,
+			ready_o     => ready_o
+		);
+
+end architecture testbench;
