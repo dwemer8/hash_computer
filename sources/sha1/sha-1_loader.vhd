@@ -105,53 +105,53 @@ begin
 				if (rec.msg_rem_length = 0) then
 					var.msg_block(511) := '1';
 					var.msg_block(63 downto 0) := slv(rec.msg_length*8, 64);
-					data_valid_o <= '1';
 
 					if (data_ready_i = '1') then
 						ready_o <= '1';
 						var.state := idle;
 					end if;
+					data_valid_o <= '1';
 
 				elsif (rec.msg_rem_length <= 55) then --64 - 8 - 1
 					var.msg_block(512 - rec.msg_rem_length*8 - 1) := '1';
 					var.msg_block(63 downto 0) := slv(rec.msg_length*8, 64);
 					var.msg_rem_length := 0;
-					data_valid_o <= '1';
 
 					if (data_ready_i = '1') then
 						ready_o <= '1';
 						var.msg_rem_length := 0;
 						var.state := idle;
 					end if;
+					data_valid_o <= '1';
 
 				elsif (rec.msg_rem_length <= 63) then
 					if (rec.cnt = 0) then
 						var.msg_block(512 - rec.msg_rem_length*8 - 1) := '1';
-						data_valid_o <= '1';
 
 						if (data_ready_i = '1') then
 							var.cnt := 1;
 						end if;
+						data_valid_o <= '1';
 
 					else
 						if (data_ready_i = '1') then
 							var.cnt := 0;
 							var.msg_block := (others => '0');
 							var.msg_block(63 downto 0) := slv(rec.msg_length*8, 64);
-							data_valid_o <= '1';
 							ready_o <= '1';
 							var.msg_rem_length := 0;
 							var.state := idle;
 						end if;
+						data_valid_o <= '1';
 					end if;
 
 				else
 					var.msg_rem_length := rec.msg_rem_length - 64;
-					data_valid_o <= '1';
 
 					if (data_ready_i = '1') then
 						var.state := waiting;
 					end if;
+					data_valid_o <= '1';
 				end if;
 
 			when waiting =>
@@ -163,6 +163,7 @@ begin
 						var.state := padding;
 
 					else
+						pull_o <= '1';
 						var.state := reading;
 					end if;
 				end if;

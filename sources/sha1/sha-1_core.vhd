@@ -10,9 +10,9 @@ entity SHA1_core is
 			clk_i : in std_logic;
 			rst_i : in std_logic;
 			msg_block_i : in std_logic_vector(511 downto 0);
-			start_i : in std_logic;
+			data_valid_i : in std_logic;
 			digest_o : out std_logic_vector(159 downto 0);
-			ready_o : out std_logic
+			data_ready_o : out std_logic
 		);
 end entity SHA1_core;
 
@@ -63,17 +63,15 @@ architecture behaviour of SHA1_core is
 
 	----------------------------------------Signals and types-------------------------------------
 
-	type state_type is (idle, W_filling, main_cycle, ending);
+	type state_type is (idle, W_filling, main_cycle);
 	type W_type is array (0 to 79) of std_logic_vector(31 downto 0);
 	type rec_type is record
 		state : state_type;
-		start : std_logic;
 		W : W_type;
 		h1, h2, h3, h4, h5, a, b, c, d, e : std_logic_vector(31 downto 0);
 		cnt : integer;
 	end record;
 	constant rst_rec : rec_type := (state => idle,
-									start => '0',
 									W => (others => (others => '0')),
 									h1 => A_init,
 									h2 => B_init,
@@ -105,45 +103,43 @@ begin
 		end if;
 	end process;
 
-	process (rec, start_i, msg_block_i)
+	process (rec, data_valid_i, msg_block_i)
 		variable var : rec_type := rst_rec;
 		variable temp : std_logic_vector(31 downto 0) := (others => '0');
 
 	begin
-		ready_o <= '0';
+		data_ready_o <= '0';
 		var := rec;
-		var.start := start_i;
 
 		temp := (others => '0');
 
 		case (rec.state) is
 			when idle =>
-				if (start_i = '1' and rec.start = '0') then
-					var.state := W_filling;
-				end if;
+				data_ready_o <= '1';
 
-			when W_filling =>
-				if (rec.cnt = 0) then
+				if (data_valid_i = '1') then
 					var.cnt := 16;
 					W_beginning : for t in 0 to 15 loop
 						var.W(t) := msg_block_i((512 - 1 - t*32) downto (512 - 32 - t*32));
 					end loop;
 
-				else
-					var.cnt := rec.cnt + 1;
-					temp := rec.W(rec.cnt - 3) xor rec.W(rec.cnt - 8) xor rec.W(rec.cnt - 14) xor rec.W(rec.cnt - 16);
-					var.W(rec.cnt) := rot_left(temp, 1);
+					var.state := W_filling;
+				end if;
 
-					if (rec.cnt >= 79) then
-						var.cnt := 0;
-						var.a := rec.h1;
-						var.b := rec.h2;
-						var.c := rec.h3;
-						var.d := rec.h4;
-						var.e := rec.h5;
+			when W_filling =>
+				var.cnt := rec.cnt + 1;
+				temp := rec.W(rec.cnt - 3) xor rec.W(rec.cnt - 8) xor rec.W(rec.cnt - 14) xor rec.W(rec.cnt - 16);
+				var.W(rec.cnt) := rot_left(temp, 1);
 
-						var.state := main_cycle;
-					end if;
+				if (rec.cnt >= 79) then
+					var.cnt := 0;
+					var.a := rec.h1;
+					var.b := rec.h2;
+					var.c := rec.h3;
+					var.d := rec.h4;
+					var.e := rec.h5;
+
+					var.state := main_cycle;
 				end if;
 
 			when main_cycle =>
@@ -156,17 +152,13 @@ begin
 
 				if (rec.cnt >= 79) then
 					var.cnt := 0;
-					var.state := ending;
-				end if;	
-
-			when ending =>
-				var.h1 := slv(uns(rec.h1) + uns(rec.a));
-				var.h2 := slv(uns(rec.h2) + uns(rec.b));
-				var.h3 := slv(uns(rec.h3) + uns(rec.c)); 
-				var.h4 := slv(uns(rec.h4) + uns(rec.d));
-				var.h5 := slv(uns(rec.h5) + uns(rec.e));
-				ready_o <= '1';
-				var.state := idle;
+					var.h1 := slv(uns(rec.h1) + uns(var.a));
+					var.h2 := slv(uns(rec.h2) + uns(var.b));
+					var.h3 := slv(uns(rec.h3) + uns(var.c)); 
+					var.h4 := slv(uns(rec.h4) + uns(var.d));
+					var.h5 := slv(uns(rec.h5) + uns(var.e));
+					var.state := idle;
+				end if;		
 
 			when others =>
 				assert false report "Unknown state" severity failure;

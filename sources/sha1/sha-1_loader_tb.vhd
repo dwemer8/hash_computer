@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Tue Dec 14 11:12:16 2021
--- Last update : Tue Dec 14 16:37:15 2021
+-- Last update : Tue Dec 14 23:14:09 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -186,11 +186,11 @@ begin
 		wait for clk_period*5;
 
 		data_ready_i <= '1';
-		wait until data_valid_o = '1';
+		assert data_valid_o = '1' 															report "FAIL 4 5" severity failure;
 		wait for clk_period;
 		data_ready_i <= '0';
-		assert msg_block_o(511 downto 64) = zero_vec(512 - 64) 								report "FAIL 4 5" severity failure;
-		assert msg_block_o(63 downto 0) = slv(msg_length_i*8, 64) 							report "FAIL 4 6" severity failure;
+		assert msg_block_o(511 downto 64) = zero_vec(512 - 64) 								report "FAIL 4 6" severity failure;
+		assert msg_block_o(63 downto 0) = slv(msg_length_i*8, 64) 							report "FAIL 4 7" severity failure;
 		report "Block 3 in message 4 is sent";
 
 		assert false 																		report "SUCCESS" severity failure;
