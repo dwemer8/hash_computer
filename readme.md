@@ -1,7 +1,6 @@
 **To do**:
 
 * fifo/memory
-* sha-1
 * sha-2
 * lcd
 * top-module
@@ -11,6 +10,7 @@
 
 * uart_tx & uart_rx
 * crc32
+* sha-1
 
 **Important directories**:
 
