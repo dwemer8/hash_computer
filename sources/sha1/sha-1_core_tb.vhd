@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Mon Dec 13 15:31:22 2021
--- Last update : Mon Dec 13 19:07:00 2021
+-- Last update : Tue Dec 14 11:55:06 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -59,19 +59,6 @@ architecture testbench of SHA1_core_tb is
 	-- Other constants
 	constant clk_period : time := 20 ns; -- NS
 
-	function strToMsg (
-		msg: string
-		) return std_logic_vector is
-		variable msg_block : std_logic_vector(511 downto 0) := (others => '0');
-	begin
-		split_loop : for i in 0 to msg'length - 1 loop
-			msg_block(512 - 1 - i*8 downto 512 - 8 - i*8) := slv(to_unsigned(character'pos(msg(i + 1)), 8));
-		end loop;
-		msg_block(512 - msg'length*8 - 1) := '1';
-		msg_block(63 downto 0) := slv(to_unsigned(msg'length, 64));
-		return msg_block;
-	end strToMsg;
-
 begin
 	-----------------------------------------------------------
 	-- Clocks
@@ -87,16 +74,17 @@ begin
 		wait for clk_period;
 
 		rst_i <= '0';
+		wait for clk_period;
 		msg_block_i <= strToMsg("The quick brown fox jumps over the lazy dog");
 		start_i <= '1';
 		wait for clk_period;
 		start_i <= '0';
 
 		wait until ready_o = '1';
-		wait for clk_period/2;
-		assert digest_o = x"2fd4e1c67a2d28fced849ee1bb76e7391b93eb12" report "Fail" severity failure;
+		wait for clk_period*2;
+		assert digest_o = x"2fd4e1c67a2d28fced849ee1bb76e7391b93eb12" report "FAIL" severity failure;
 
-		assert false report "Success" severity failure;
+		assert false report "SUCCESS" severity failure;
 		wait;
 	end process;
 

@@ -63,16 +63,16 @@ architecture behaviour of SHA1_core is
 
 	----------------------------------------Signals and types-------------------------------------
 
-	type state_type is (idle, W_filling, main_cycle);
+	type state_type is (idle, W_filling, main_cycle, ending);
 	type W_type is array (0 to 79) of std_logic_vector(31 downto 0);
-	type reg_type is record
+	type rec_type is record
 		state : state_type;
 		start : std_logic;
 		W : W_type;
 		h1, h2, h3, h4, h5, a, b, c, d, e : std_logic_vector(31 downto 0);
 		cnt : integer;
 	end record;
-	constant rst_reg : reg_type := (state => idle,
+	constant rst_rec : rec_type := (state => idle,
 									start => '0',
 									W => (others => (others => '0')),
 									h1 => A_init,
@@ -87,88 +87,91 @@ architecture behaviour of SHA1_core is
 									e => (others => '0'),
 									cnt => 0
 									);
-	signal reg, reg_in : reg_type := rst_reg;
+	signal rec, rec_in : rec_type := rst_rec;
 
 begin
 
-	digest_o <= reg_in.h1 & reg_in.h2 & reg_in.h3 & reg_in.h4 & reg_in.h5;
+	digest_o <= rec_in.h1 & rec_in.h2 & rec_in.h3 & rec_in.h4 & rec_in.h5;
 	
 	process (clk_i)
 	begin
 		if (rising_edge(clk_i)) then
 			if rst_i = '1' then 
-				reg <= rst_reg;
+				rec <= rst_rec;
 
 			else
-				reg <= reg_in;
+				rec <= rec_in;
 			end if;
 		end if;
 	end process;
 
-	process (reg, start_i, msg_block_i)
-		variable var : reg_type := rst_reg;
+	process (rec, start_i, msg_block_i)
+		variable var : rec_type := rst_rec;
 		variable temp : std_logic_vector(31 downto 0) := (others => '0');
 
 	begin
 		ready_o <= '0';
-		var := reg;
+		var := rec;
 		var.start := start_i;
 
-		case (reg.state) is
+		temp := (others => '0');
+
+		case (rec.state) is
 			when idle =>
-				if (start_i = '1' and reg.start = '0') then
+				if (start_i = '1' and rec.start = '0') then
 					var.state := W_filling;
 				end if;
 
 			when W_filling =>
-				if (reg.cnt = 0) then
+				if (rec.cnt = 0) then
 					var.cnt := 16;
 					W_beginning : for t in 0 to 15 loop
 						var.W(t) := msg_block_i((512 - 1 - t*32) downto (512 - 32 - t*32));
 					end loop;
 
 				else
-					var.cnt := reg.cnt + 1;
-					temp := reg.W(reg.cnt - 3) xor reg.W(reg.cnt - 8) xor reg.W(reg.cnt - 14) xor reg.W(reg.cnt - 16);
-					var.W(reg.cnt) := rot_left(temp, 1);
+					var.cnt := rec.cnt + 1;
+					temp := rec.W(rec.cnt - 3) xor rec.W(rec.cnt - 8) xor rec.W(rec.cnt - 14) xor rec.W(rec.cnt - 16);
+					var.W(rec.cnt) := rot_left(temp, 1);
 
-					if (reg.cnt >= 79) then
+					if (rec.cnt >= 79) then
 						var.cnt := 0;
-						var.a := reg.h1;
-						var.b := reg.h2;
-						var.c := reg.h3;
-						var.d := reg.h4;
-						var.e := reg.h5;
+						var.a := rec.h1;
+						var.b := rec.h2;
+						var.c := rec.h3;
+						var.d := rec.h4;
+						var.e := rec.h5;
 
 						var.state := main_cycle;
 					end if;
 				end if;
 
 			when main_cycle =>
+				var.cnt := rec.cnt + 1;
+				var.e := rec.d;
+				var.d := rec.c;
+				var.c := rot_left(rec.b, 30);
+				var.b := rec.a;
+				var.a := slv(uns(rot_left(rec.a, 5)) + uns(F_op(rec.b, rec.c, rec.d, rec.cnt)) + uns(rec.e) + uns(rec.W(rec.cnt)) + uns(K_const(rec.cnt)));
 
-				var.cnt := reg.cnt + 1;
-				var.e := reg.d;
-				var.d := reg.c;
-				var.c := rot_left(reg.b, 30);
-				var.b := reg.a;
-				var.a := slv(uns(rot_left(reg.a, 5)) + uns(F_op(reg.b, reg.c, reg.d, reg.cnt)) + uns(reg.e) + uns(reg.W(reg.cnt)) + uns(K_const(reg.cnt)));
-
-				if (reg.cnt >= 79) then
+				if (rec.cnt >= 79) then
 					var.cnt := 0;
-					var.h1 := slv(uns(reg.h1) + uns(var.a));
-					var.h2 := slv(uns(reg.h2) + uns(var.b));
-					var.h3 := slv(uns(reg.h3) + uns(var.c)); 
-					var.h4 := slv(uns(reg.h4) + uns(var.d));
-					var.h5 := slv(uns(reg.h5) + uns(var.e));
+					var.state := ending;
+				end if;	
 
-					ready_o <= '1';
-					var.state := idle;
-				end if;
+			when ending =>
+				var.h1 := slv(uns(rec.h1) + uns(rec.a));
+				var.h2 := slv(uns(rec.h2) + uns(rec.b));
+				var.h3 := slv(uns(rec.h3) + uns(rec.c)); 
+				var.h4 := slv(uns(rec.h4) + uns(rec.d));
+				var.h5 := slv(uns(rec.h5) + uns(rec.e));
+				ready_o <= '1';
+				var.state := idle;
 
 			when others =>
 				assert false report "Unknown state" severity failure;
 		end case;
 
-		reg_in <= var;
+		rec_in <= var;
 	end process;
 end architecture;
