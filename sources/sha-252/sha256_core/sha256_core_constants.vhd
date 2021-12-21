@@ -4,9 +4,9 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.sha256_types.all;
+use work.sha256_core_types.all;
 
-package sha256_constants is
+package sha256_core_constants is
 
 	-- Initial intermediate hash values:
 	constant INITIAL_A : std_logic_vector(31 downto 0) := x"6a09e667";

@@ -5,10 +5,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.sha256_types.all;
-use work.sha256_constants.all;
+use work.sha256_core_types.all;
+use work.sha256_core_constants.all;
 
-package sha256_functions is
+package sha256_core_functions is
 
 	-- Function used to index arrays using std_logic_vector:
 	function index(input : in std_logic_vector) return integer;
@@ -42,9 +42,9 @@ package sha256_functions is
 	function o0(x : std_logic_vector) return std_logic_vector;
 	function o1(x : std_logic_vector) return std_logic_vector;
 
-end package sha256_functions;
+end package sha256_core_functions;
 
-package body sha256_functions is
+package body sha256_core_functions is
 
 	function index(input : in std_logic_vector) return integer is
 	begin
@@ -155,4 +155,4 @@ package body sha256_functions is
 		return std_logic_vector(rotate_right(unsigned(x), 17) xor rotate_right(unsigned(x), 19) xor shift_right(unsigned(x), 10));
 	end function o1;
 
-end package body sha256_functions;
+end package body sha256_core_functions;

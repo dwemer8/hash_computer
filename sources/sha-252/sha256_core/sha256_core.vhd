@@ -8,11 +8,11 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.sha256_types.all;
-use work.sha256_constants.all;
-use work.sha256_functions.all;
+use work.sha256_core_types.all;
+use work.sha256_core_constants.all;
+use work.sha256_core_functions.all;
 
-entity sha256 is
+entity sha256_core is
 	port(
 		clk    : in std_logic;
 		reset  : in std_logic;
@@ -32,9 +32,9 @@ entity sha256 is
 		-- Debug port, used in simulation; leave unconnected:
 		debug_port : out std_logic_vector(31 downto 0)
 	);
-end entity sha256;
+end entity sha256_core;
 
-architecture behaviour of sha256 is
+architecture behaviour of sha256_core is
 
 	-- The module's state machine:
 	type state_type is (IDLE, BUSY, FINAL);

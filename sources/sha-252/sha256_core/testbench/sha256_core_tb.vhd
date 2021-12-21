@@ -4,10 +4,10 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity tb_sha256 is
-end entity tb_sha256;
+entity tb_sha256_core is
+end entity tb_sha256_core;
 
-architecture testbench of tb_sha256 is
+architecture testbench of tb_sha256_core is
 	-- Input signals:
 	signal reset : std_logic := '0';
 	signal enable : std_logic := '1';
@@ -28,7 +28,7 @@ architecture testbench of tb_sha256 is
 	signal testdata_address : std_logic_vector(5 downto 0);
 begin
 
-	uut: entity work.sha256
+	uut: entity work.sha256_core
 		port map(
 			clk => clk,
 			reset => reset,
