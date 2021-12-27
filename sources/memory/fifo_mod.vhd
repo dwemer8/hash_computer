@@ -34,6 +34,7 @@ entity FIFO_8x10240_mod is
         clk     : in  STD_LOGIC;
         rst     : in  STD_LOGIC;
         rAddrRst : in std_logic;
+        rStartSet : in std_logic;
         dataIn  : in  STD_LOGIC_VECTOR (DATA_WIDTH - 1 downto 0);
         dataOut : out STD_LOGIC_VECTOR (DATA_WIDTH - 1 downto 0);
         push    : in  STD_LOGIC;
@@ -76,13 +77,14 @@ architecture Behavioral of FIFO_8x10240_mod is
 
     type state_type is (empty, data, full);
     type rec_type is record
-        state                             : state_type;
-        writePointer                      : std_logic_vector(FIFO_ADDR_WIDTH - 1 downto 0);
-        readPointer                       : std_logic_vector(FIFO_ADDR_WIDTH - 1 downto 0);
-        addrInBuf : std_logic_vector(FIFO_ADDR_WIDTH - 1 downto 0);
-        addrOutBuf : std_logic_vector(FIFO_ADDR_WIDTH - 1 downto 0);
-        emptyPop : std_logic;
-        ram_we : std_logic_vector(0 to BRAMS_AMOUNT - 1);
+        state           : state_type;
+        writePointer    : std_logic_vector(FIFO_ADDR_WIDTH - 1 downto 0);
+        readPointer     : std_logic_vector(FIFO_ADDR_WIDTH - 1 downto 0);
+        addrInBuf       : std_logic_vector(FIFO_ADDR_WIDTH - 1 downto 0);
+        addrOutBuf      : std_logic_vector(FIFO_ADDR_WIDTH - 1 downto 0);
+        emptyPop        : std_logic;
+        ram_we          : std_logic_vector(0 to BRAMS_AMOUNT - 1);
+        rStartAddr      : std_logic_vector(FIFO_ADDR_WIDTH - 1 downto 0);
     end record;
     signal rst_rec : rec_type :=    (empty, 
                                     (others => '0'), 
@@ -90,6 +92,7 @@ architecture Behavioral of FIFO_8x10240_mod is
                                     (others => '0'), 
                                     (others => '0'), 
                                     '0',
+                                    (others => '0'),
                                     (others => '0')
                                     );
     signal rec, rec_in : rec_type := rst_rec;
@@ -107,38 +110,36 @@ begin
     process(clk)
     begin
         if (Rising_edge(clk)) then
-
             if (rst = '1') then
                 rec <= rst_rec;
 
             else
                 rec <= rec_in;
-
-                if (rAddrRst = '1' ) then
-                    rec.readPointer <= zero_vec(rec.readPointer'length);
-                end if;
-            end if;
-
-            if (rec_in.state = empty) then
-                isEmpty <= '1';
-                isFull  <= '0';
-            elsif (rec_in.state = full) then
-                isEmpty <= '0';
-                isFull  <= '1';
-            else
-                isEmpty <= '0';
-                isFull  <= '0';
             end if;
         end if;
     end process;
 
-    process(rec, push, pop, dataIn, ram_q)
+    process(rec, push, pop, dataIn, ram_q, rAddrRst, rStartSet)
         variable var : rec_type := rst_rec;
 
     begin
         var := rec;
         var.emptyPop := '0';
         var.ram_we := (others => '0');
+
+        if (rStartSet = '1') then
+            var.rStartAddr := rec.readPointer;
+        end if;
+
+        if (rAddrRst = '1') then
+            var.readPointer := rec.rStartAddr;
+            
+            if (rec.rStartAddr /= zero_vec(rec.rStartAddr'length)) then
+                var.addrOutBuf := slv(uns(rec.rStartAddr) - uns(1, rec.rStartAddr'length));
+            else
+                var.addrOutBuf := zero_vec(var.addrOutBuf'length);
+            end if;
+        end if;
 
         if (pop = '1' and push = '1') then
             case (rec.state) is
@@ -184,7 +185,8 @@ begin
         if (var.writePointer /= var.readPointer) then
             var.state := data;
         else
-            if ((var.writePointer /= rec.writePointer and var.readPointer /= rec.readPointer) or (var.writePointer = rec.writePointer and var.readPointer = rec.readPointer)) then
+            if ((var.writePointer /= rec.writePointer and var.readPointer /= rec.readPointer) or 
+                (var.writePointer = rec.writePointer and var.readPointer = rec.readPointer)) then
                 var.state := rec.state;
             elsif (var.writePointer /= rec.writePointer) then
                 var.state := full;
@@ -192,6 +194,18 @@ begin
                 var.state := empty;
             end if;
         end if;
+
+        case (var.state) is
+        when empty =>
+            isEmpty <= '1';
+            isFull  <= '0';
+        when full =>
+            isEmpty <= '0';
+            isFull  <= '1';
+        when data =>
+            isEmpty <= '0';
+            isFull  <= '0';
+        end case;
 
         if (var.emptyPop = '0') then
             dataOut <= ram_q(ramId(rec.addrOutBuf));

@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Sun Dec 26 21:35:13 2021
--- Last update : Mon Dec 27 13:54:45 2021
+-- Last update : Mon Dec 27 19:16:59 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -44,6 +44,7 @@ architecture testbench of FIFO_8x10240_mod_tb is
 			clk      : in  STD_LOGIC;
 			rst      : in  STD_LOGIC;
 			rAddrRst : in  std_logic;
+			rStartSet : in std_logic;
 			dataIn   : in  STD_LOGIC_VECTOR (DATA_WIDTH - 1 downto 0);
 			dataOut  : out STD_LOGIC_VECTOR (DATA_WIDTH - 1 downto 0);
 			push     : in  STD_LOGIC;
@@ -60,6 +61,7 @@ architecture testbench of FIFO_8x10240_mod_tb is
 	signal clk      : STD_LOGIC := '1';
 	signal rst      : STD_LOGIC := '1';
 	signal rAddrRst : std_logic := '0';
+	signal rStartSet : std_logic := '0';
 	signal dataIn   : STD_LOGIC_VECTOR (DATA_WIDTH - 1 downto 0) := (others => '0');
 	signal dataOut  : STD_LOGIC_VECTOR (DATA_WIDTH - 1 downto 0);
 	signal push     : STD_LOGIC := '0';
@@ -86,7 +88,7 @@ begin
 		wait for rst_delay;
 
 		push <= '1';
-		push_loop : for i in 0 to 9 loop
+		push_loop : for i in 0 to 550 loop
 			s_i <= i;
 			dataIn <= slv(i, 8);
 			wait for clk_period;
@@ -94,11 +96,40 @@ begin
 		push <= '0';
 
 		pop <= '1';
-		pop_loop : for i in 0 to 9 loop
+		for i in 0 to 510 loop
 			s_i <= i;
-			wait for clk_period;
+			wait for clk_period/2;
+			if (i /= 0) then
+				assert dataOut = slv(i - 1, 8) report "FAILURE" severity failure;
+			end if;
+			wait for clk_period/2;
 		end loop;
 		pop <= '0';
+		wait for clk_period/2;
+		assert dataOut = slv(510, 8) report "FAILURE" severity failure;
+		wait for clk_period/2;
+
+		rStartSet <= '1';
+		wait for clk_period;
+		rStartSet <= '0';
+
+		rAddrRst <= '1';
+		wait for clk_period;
+		rAddrRst <= '0';
+
+		pop <= '1';
+		for i in 511 to 550 loop
+			s_i <= i;
+			wait for clk_period/2;
+			if (i /= 0) then
+				assert dataOut = slv(i - 1, 8) report "FAILURE" severity failure;
+			end if;
+			wait for clk_period/2;
+		end loop;
+		pop <= '0';
+		wait for clk_period/2;
+		assert dataOut = slv(550, 8) report "FAILURE" severity failure;
+		wait for clk_period/2;
 
 		wait for clk_period;
 		assert false report "SUCCESS" severity failure;
@@ -116,6 +147,7 @@ begin
 			clk      => clk,
 			rst      => rst,
 			rAddrRst => rAddrRst,
+			rStartSet => rStartSet,
 			dataIn   => dataIn,
 			dataOut  => dataOut,
 			push     => push,

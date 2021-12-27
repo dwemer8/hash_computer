@@ -1,6 +1,5 @@
 **To do**:
 
-* fifo/memory
 * lcd
 * top-module
 	* button debouncer
@@ -11,6 +10,7 @@
 * crc32
 * sha-1
 * sha-256
+* memory
 
 **Important directories**:
 
