@@ -81,7 +81,8 @@ architecture Behavioral of FIFO_8x10240_mod is
         readPointer                       : std_logic_vector(FIFO_ADDR_WIDTH - 1 downto 0);
         addrInBuf : std_logic_vector(FIFO_ADDR_WIDTH - 1 downto 0);
         addrOutBuf : std_logic_vector(FIFO_ADDR_WIDTH - 1 downto 0);
-        transfSigIn, transfSigOut, emptyPop : std_logic;
+        emptyPop : std_logic;
+        ram_we : std_logic_vector(0 to BRAMS_AMOUNT - 1);
     end record;
     signal rst_rec : rec_type :=    (empty, 
                                     (others => '0'), 
@@ -89,8 +90,8 @@ architecture Behavioral of FIFO_8x10240_mod is
                                     (others => '0'), 
                                     (others => '0'), 
                                     '0',
-                                    '0',
-                                    '0');
+                                    (others => '0')
+                                    );
     signal rec, rec_in : rec_type := rst_rec;
 
     function ramId(address : std_logic_vector) return natural is
@@ -99,24 +100,19 @@ architecture Behavioral of FIFO_8x10240_mod is
     end function ramId;
 
 begin
+    ram_data <= dataIn;
+    ram_waddr <= int(rec_in.addrInBuf(RAM_ADDR_WIDTH - 1 downto 0));
+    ram_we <= rec_in.ram_we;
+
     process(clk)
     begin
         if (Rising_edge(clk)) then
-            ram_we <= (others => '0');
 
             if (rst = '1') then
                 rec <= rst_rec;
 
             else
                 rec <= rec_in;
-                rec.emptyPop <= '0';
-
-                if (rec_in.transfSigIn = '1') then
-                    ram_data <= dataIn;
-                    ram_waddr <= int(rec_in.addrInBuf(RAM_ADDR_WIDTH - 1 downto 0));
-                    ram_we(ramId(rec_in.addrInBuf)) <= '1';
-                    rec.transfSigIn         <= '0';
-                end if;
 
                 if (rAddrRst = '1' ) then
                     rec.readPointer <= zero_vec(rec.readPointer'length);
@@ -141,32 +137,32 @@ begin
 
     begin
         var := rec;
+        var.emptyPop := '0';
+        var.ram_we := (others => '0');
 
         if (pop = '1' and push = '1') then
-            var.writePointer := slv(uns(rec.writePointer) + uns(1, rec.writePointer'length));
-            var.readPointer  := slv(uns(rec.readPointer) + uns(1, rec.readPointer'length));
-
             case (rec.state) is
             when empty =>
                 var.emptyPop := '1';
-                var.transfSigOut := '1';
 
             when full | data =>
                 ram_raddr <= int(rec.readPointer(RAM_ADDR_WIDTH - 1 downto 0));
                 var.addrOutBuf := rec.readPointer;
-                var.transfSigOut := '1';
 
                 var.addrInBuf  := rec.writePointer;
-                var.transfSigIn := '1';
+                var.ram_we(ramId(var.addrInBuf)) := '1';
                 
             when others =>
                 assert false report "Unknown state" severity failure;
             end case;
 
+            var.writePointer := slv(uns(rec.writePointer) + uns(1, rec.writePointer'length));
+            var.readPointer  := slv(uns(rec.readPointer) + uns(1, rec.readPointer'length));
+
         elsif (push = '1') then
             if (rec.state /= full) then
                 var.addrInBuf := rec.writePointer;
-                var.transfSigIn := '1';
+                var.ram_we(ramId(var.addrInBuf)) := '1';
                 var.writePointer := slv(uns(rec.writePointer) + uns(1, rec.writePointer'length));
             end if; -- else 'push' ignored to save previous data
 
@@ -174,9 +170,15 @@ begin
             if (rec.state /= empty) then
                 ram_raddr <= int(rec.readPointer(RAM_ADDR_WIDTH - 1 downto 0));
                 var.addrOutBuf := rec.readPointer;
-                var.transfSigOut := '1';
                 var.readPointer := slv(uns(rec.readPointer) + uns(1, rec.readPointer'length));
             end if; -- else 'pop' ignored to transmit last data
+        end if;
+
+        if (var.writePointer = slv(FIFO_DATA_DEPTH, var.writePointer'length)) then
+            var.writePointer := zero_vec(var.writePointer'length);
+        end if;
+        if (var.readPointer = slv(FIFO_DATA_DEPTH, var.readPointer'length)) then
+            var.readPointer := zero_vec(var.readPointer'length);
         end if;
 
         if (var.writePointer /= var.readPointer) then
@@ -189,13 +191,6 @@ begin
             else
                 var.state := empty;
             end if;
-        end if;
-
-        if (var.writePointer = slv(FIFO_DATA_DEPTH, var.writePointer'length)) then
-            var.writePointer := zero_vec(var.writePointer'length);
-        end if;
-        if (var.readPointer = slv(FIFO_DATA_DEPTH, var.readPointer'length)) then
-            var.readPointer := zero_vec(var.readPointer'length);
         end if;
 
         if (var.emptyPop = '0') then

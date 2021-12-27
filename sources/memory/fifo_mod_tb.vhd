@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Sun Dec 26 21:35:13 2021
--- Last update : Mon Dec 27 12:01:19 2021
+-- Last update : Mon Dec 27 13:54:45 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -93,14 +93,12 @@ begin
 		end loop;
 		push <= '0';
 
+		pop <= '1';
 		pop_loop : for i in 0 to 9 loop
 			s_i <= i;
-			pop <= '1';
 			wait for clk_period;
-			pop <= '0';
-			wait for clk_period*2;
 		end loop;
-		
+		pop <= '0';
 
 		wait for clk_period;
 		assert false report "SUCCESS" severity failure;
