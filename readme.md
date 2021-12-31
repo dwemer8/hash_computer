@@ -1,6 +1,5 @@
 **To do**:
 
-* lcd
 * top-module
 	* button debouncer
 
@@ -11,6 +10,7 @@
 * sha-1
 * sha-256
 * memory
+* lcd
 
 **Important directories**:
 
