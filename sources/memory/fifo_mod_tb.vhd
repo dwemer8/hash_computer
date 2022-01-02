@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Sun Dec 26 21:35:13 2021
--- Last update : Mon Dec 27 19:16:59 2021
+-- Last update : Sun Jan  2 12:25:58 2022
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -86,6 +86,13 @@ begin
 	process
 	begin
 		wait for rst_delay;
+
+		pop <= '1';
+		push <= '1';
+		wait for clk_period;
+		push <= '0';
+		pop <= '0';
+		wait for clk_period;
 
 		push <= '1';
 		push_loop : for i in 0 to 550 loop

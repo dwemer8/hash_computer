@@ -1,8 +1,3 @@
-**To do**:
-
-* top-module
-	* button debouncer
-
 **Done**:
 
 * uart_tx & uart_rx
@@ -11,6 +6,7 @@
 * sha-256
 * memory
 * lcd
+* top-module
 
 **Important directories**:
 

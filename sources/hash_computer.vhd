@@ -191,12 +191,10 @@ library ieee;
 		crc32_data <= '0';
 
 		sha1_ldr_start <= '0';
-		sha1_ldr_pull <= '0';
 		sha1_ldr_msg_length <= 0;
 		sha1_core_rst <= rst_i;
 
 		sha256_ldr_start <= '0';
-		sha256_ldr_pull <= '0';
 		sha256_ldr_msg_length <= 0;
 		sha256_core_rst <= rst_i;
 

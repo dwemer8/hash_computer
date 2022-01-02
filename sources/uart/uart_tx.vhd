@@ -130,5 +130,5 @@ begin
     end process;
 
     Tx_o <= rnext.tx_o; 
-    Tx_busy_o <= rnext.tx_busy_o;
+    Tx_busy_o <= rprev.tx_busy_o;
 end Behavioral;

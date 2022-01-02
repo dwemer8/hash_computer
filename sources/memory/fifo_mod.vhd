@@ -160,11 +160,22 @@ begin
             var.writePointer := slv(uns(rec.writePointer) + uns(1, rec.writePointer'length));
             var.readPointer  := slv(uns(rec.readPointer) + uns(1, rec.readPointer'length));
 
+            if (rec.writePointer = slv(FIFO_DATA_DEPTH - 1, rec.writePointer'length)) then
+                var.writePointer := zero_vec(var.writePointer'length);
+            end if;
+            if (rec.readPointer = slv(FIFO_DATA_DEPTH - 1, rec.readPointer'length)) then
+                var.readPointer := zero_vec(var.readPointer'length);
+            end if;
+
         elsif (push = '1') then
             if (rec.state /= full) then
                 var.addrInBuf := rec.writePointer;
                 var.ram_we(ramId(var.addrInBuf)) := '1';
                 var.writePointer := slv(uns(rec.writePointer) + uns(1, rec.writePointer'length));
+                
+                if (rec.writePointer = slv(FIFO_DATA_DEPTH - 1, rec.writePointer'length)) then
+                    var.writePointer := zero_vec(var.writePointer'length);
+                end if;
             end if; -- else 'push' ignored to save previous data
 
         elsif (pop = '1') then
@@ -172,17 +183,14 @@ begin
                 ram_raddr <= int(rec.readPointer(RAM_ADDR_WIDTH - 1 downto 0));
                 var.addrOutBuf := rec.readPointer;
                 var.readPointer := slv(uns(rec.readPointer) + uns(1, rec.readPointer'length));
+
+                if (rec.readPointer = slv(FIFO_DATA_DEPTH - 1, rec.readPointer'length)) then
+                    var.readPointer := zero_vec(var.readPointer'length);
+                end if;
             end if; -- else 'pop' ignored to transmit last data
         end if;
 
-        if (var.writePointer = slv(FIFO_DATA_DEPTH, var.writePointer'length)) then
-            var.writePointer := zero_vec(var.writePointer'length);
-        end if;
-        if (var.readPointer = slv(FIFO_DATA_DEPTH, var.readPointer'length)) then
-            var.readPointer := zero_vec(var.readPointer'length);
-        end if;
-
-        if (var.writePointer /= var.readPointer) then
+        if (rec.writePointer /= rec.readPointer) then
             var.state := data;
         else
             if ((var.writePointer /= rec.writePointer and var.readPointer /= rec.readPointer) or 
@@ -195,7 +203,7 @@ begin
             end if;
         end if;
 
-        case (var.state) is
+        case (rec.state) is
         when empty =>
             isEmpty <= '1';
             isFull  <= '0';
@@ -207,14 +215,11 @@ begin
             isFull  <= '0';
         end case;
 
-        if (var.emptyPop = '0') then
-            dataOut <= ram_q(ramId(rec.addrOutBuf));
-        else
-            dataOut <= dataIn;
-        end if;
-
-        rec_in  <= var;
+        rec_in <= var;
     end process;
+    
+
+    with rec_in.emptyPop select dataOut <= ram_q(ramId(rec.addrOutBuf)) when '0', dataIn when others;
 
     brams_gen : for i in 0 to BRAMS_AMOUNT - 1 generate
     begin

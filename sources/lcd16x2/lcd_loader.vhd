@@ -115,16 +115,20 @@ architecture lcd_loader_arch of lcd_loader is
 		end case;
 	end function;
 
-	procedure screenBufLoad (
-		data : in std_logic_vector(255 downto 0);
-		start_shift : in integer;
-		screen_buffer : out screen_type
-	) is
-	begin
-		screen_init_loop : for i in 0 to 31 loop
-			screen_buffer(i) := data(255 - start_shift*4 - i*4 downto 252 - start_shift*4 - i*4);
-		end loop;
-	end procedure screenBufLoad;
+	--procedure screenBufLoad (
+	--	data : in std_logic_vector(255 downto 0);
+	--	start_shift : in integer;
+	--	screen_buffer : out screen_type
+	--) is
+	--begin
+	--	if (start_shift >= 0 and start_shift <= 32) then
+	--		screen_init_loop : for i in 0 to 31 loop
+	--			screen_buffer(i) := data(255 - start_shift*4 - i*4 downto 252 - start_shift*4 - i*4);
+	--		end loop;
+	--	else
+	--		assert false report "Unvalid shift" severity failure;
+	--	end if;
+	--end procedure screenBufLoad;
 
 begin
 
@@ -158,7 +162,11 @@ begin
 			var.ready := '1';
 			var.data := data_i;
 			var.data_type := data_type_i;
-			screenBufLoad(data_i, 0, var.screen_buffer);
+			--screenBufLoad(data_i, 0, var.screen_buffer);
+
+			for i in 0 to 31 loop
+				var.screen_buffer(i) := data_i(255 - i*4 downto 252 - i*4);
+			end loop;
 			var.start_shift := 1;
 
 			var.state := screen_loading;
@@ -195,7 +203,11 @@ begin
 			var.delay_cnt := rec.delay_cnt - 1;
 			if (rec.delay_cnt = 0) then
 				var.delay_cnt := char_delay;
-				screenBufLoad(rec.data, rec.start_shift, var.screen_buffer);
+				--screenBufLoad(rec.data, rec.start_shift, var.screen_buffer);
+
+				for i in 0 to 31 loop
+					var.screen_buffer(i) := rec.data(255 - rec.start_shift*4 - i*4 downto 252 - rec.start_shift*4 - i*4);
+				end loop;
 				var.start_shift := rec.start_shift + 1;
 				var.state := screen_loading;
 
