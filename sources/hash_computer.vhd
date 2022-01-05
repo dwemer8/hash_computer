@@ -17,26 +17,26 @@ library ieee;
  use ieee.numeric_std;
 
  entity hash_computer is
- 	generic ( FREQUENCY : integer := 50; --MHz
-              BAUDRATE : integer := 19200;
-              BYTE_SIZE : integer := 8;
-              CRC32_INIT : std_logic_vector(31 downto 0) := x"FFFFFFFF";
-              CRC32_XOROUT : std_logic_vector(31 downto 0) := x"FFFFFFFF"
+ 	generic ( FREQUENCY : integer := 50; --MHz частота тактового сигнала
+              BAUDRATE : integer := 19200; --бодрейт UART
+              BYTE_SIZE : integer := 8; --ширина байта данных
+              CRC32_INIT : std_logic_vector(31 downto 0) := x"FFFFFFFF"; --стартовое значение регистра CRC32
+              CRC32_XOROUT : std_logic_vector(31 downto 0) := x"FFFFFFFF" --значение, с которым выполняется xor результата вычисления CRC32
             );
  	port (
- 			clk_i : in std_logic;
+ 			clk_i : in std_logic; --тактовый сигнал
  			--buttons
- 			rst_i : in std_logic;
- 			start_comp_i : in std_logic;
- 			switch_mode_i : in std_logic;
+ 			rst_i : in std_logic; --кнопка сброса
+ 			start_comp_i : in std_logic; --кнопка начала вычисления хеша для сообщения
+ 			switch_mode_i : in std_logic; --кнопка переключения режима вычисления хеша
  			--connection
-            uart_rx_i : in std_logic;
-            uart_tx_o : out std_logic;
+            uart_rx_i : in std_logic; --линия uart rx
+            uart_tx_o : out std_logic; --линия uart tx
             --lcd
-            rw_o, rs_o, e_o : out std_logic;
-			lcd_data_o      : out std_logic_vector(7 downto 0);
+            rw_o, rs_o, e_o : out std_logic; --read/write, setup/data, and enable for lcd
+			lcd_data_o      : out std_logic_vector(7 downto 0); --data signals for lcd
 			--led
-			ready_o : out std_logic
+			ready_o : out std_logic --сигнал актуальности вычисленного значения, выводится на светодиод, больше нужен для удобства симуляции
  		);
  end entity hash_computer;
 
