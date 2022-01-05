@@ -1,3 +1,5 @@
+--Модуль управления LCD. Если тип данных sha1 или sha256, то модуль переодически обновляет память LCD, осущесвляя промотку значений хешей на экране ("бегущая строка"). Между обновлениями модуль ждет, чтобы человек мог считать содержимое экрана.
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -7,16 +9,16 @@ use work.lcd_pkg.all;
 
 entity lcd_loader is
 	port (
-		clk_i : in std_logic;
-		rst_i : in std_logic;
+		clk_i : in std_logic; -- тактовый сигнал
+		rst_i : in std_logic; -- сигнал сброса
 
-		data_valid_i : in std_logic;
-		data_ready_o : out std_logic;
-		data_type_i : in std_logic_vector(1 downto 0);
-		data_i : in std_logic_vector(255 downto 0);
+		data_valid_i : in std_logic; -- сигнал валидности данных. Если в 1 вместе с data_ready_o, данные считываются
+		data_ready_o : out std_logic; -- сигнал готовности считать данные. Если в 1 вместе с data_valid_i, данные считываются
+		data_type_i : in std_logic_vector(1 downto 0); -- тип данных. "00" - crc32, "01" - sha1 , "10" - sha256
+		data_i : in std_logic_vector(255 downto 0); -- входные данные. Используется одна шина для всех хешей
 
-		rw_o, rs_o, e_o : out std_logic;
-		lcd_data_o : out std_logic_vector(7 downto 0)
+		rw_o, rs_o, e_o : out std_logic; --read/write, setup/data, and enable for lcd
+		lcd_data_o : out std_logic_vector(7 downto 0) --data signals for lcd
 	);
 end lcd_loader;
 

@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Sun Dec 26 21:35:13 2021
--- Last update : Sun Jan  2 12:25:58 2022
+-- Last update : Wed Jan  5 23:35:29 2022
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -17,6 +17,8 @@
 -- Revisions:  Revisions and documentation are controlled by
 -- the revision control system (RCS).  The RCS should be consulted
 -- on revision history.
+
+--Тестбенч для FIFO_8x10240_mod. Проверяет правильность загрузки данных в FIFO.
 -------------------------------------------------------------------------------
 
 library ieee;

@@ -1,3 +1,5 @@
+--Ядро для вычисления SHA1. Входные данные должны быть подготовлены.
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use ieee.numeric_std.all;
@@ -7,12 +9,12 @@ use work.sha1_pkg.all;
 
 entity SHA1_core is
 	port (
-			clk_i : in std_logic;
-			rst_i : in std_logic;
-			msg_block_i : in std_logic_vector(511 downto 0);
-			data_valid_i : in std_logic;
-			digest_o : out std_logic_vector(159 downto 0);
-			data_ready_o : out std_logic
+			clk_i : in std_logic; --тактовый сигнал
+			rst_i : in std_logic; --сигнал сброса. Должен быть поднят в 1 перед каждым новым вычислением
+			msg_block_i : in std_logic_vector(511 downto 0); --блок данных
+			data_valid_i : in std_logic; --сигнал загрузки данных. Если в 1 вместе с data_ready_o, данные загружаются
+			digest_o : out std_logic_vector(159 downto 0); --хэш-значение
+			data_ready_o : out std_logic --сигнал готовности загрузить данные. Если в 1 вместе с data_valid_i, данные загружаются
 		);
 end entity SHA1_core;
 

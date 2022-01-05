@@ -1,5 +1,6 @@
 -- SHA256 Hashing Module - Testbench
 -- Kristian Klomsten Skordal <kristian.skordal@wafflemail.net>
+-- Тестбенч для sha256_core. Проверяет правильность вычисления sha256 сообщений различной длины, эмулируя ROM.
 
 library ieee;
 use ieee.std_logic_1164.all;

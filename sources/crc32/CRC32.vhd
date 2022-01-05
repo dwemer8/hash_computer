@@ -1,18 +1,20 @@
+--Модуль для вычисления CRC-32/BZIP2. 
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
 entity CRC32 is
    generic (
       --CRC-32/BZIP2
-      INIT   : STD_LOGIC_VECTOR (31 downto 0) := x"FFFFFFFF";
-      XOROUT : STD_LOGIC_VECTOR (31 downto 0) := x"FFFFFFFF"
+      INIT   : STD_LOGIC_VECTOR (31 downto 0) := x"FFFFFFFF"; --начальное значение регистра 
+      XOROUT : STD_LOGIC_VECTOR (31 downto 0) := x"FFFFFFFF" --значение, с которым выполнятся XOR результата вычислений
    );
    Port (
-      clk_i        : in  STD_LOGIC;
-      rst_i        : in  STD_LOGIC;
-      data_valid_i : in  STD_LOGIC;
-      data_i       : in  STD_LOGIC;
-      checksum_o   : out STD_LOGIC_VECTOR (31 downto 0)
+      clk_i        : in  STD_LOGIC; --тактовый сигнал
+      rst_i        : in  STD_LOGIC; --сигнал сброса. Модуль должен быть сброшен перед каждым новым вычислением.
+      data_valid_i : in  STD_LOGIC; --сигнал валидности данных. Если в 1, data_i на этом такте используется для вычисления, если в 0, то нет.
+      data_i       : in  STD_LOGIC; --бит данных сообщения, CRC32 которого вычисляется
+      checksum_o   : out STD_LOGIC_VECTOR (31 downto 0) --контрольная сумма
    );
 end CRC32;
 

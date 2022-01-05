@@ -1,3 +1,5 @@
+--Модуль препроцессирования данных и их загрузки в sha1_core для вычисления sha1.
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use ieee.numeric_std.all;
@@ -8,22 +10,22 @@ use work.sha1_pkg.all;
 entity sha1_loader is
 	port (
 		--common
-		clk_i : in std_logic;
-		rst_i : in std_logic;
+		clk_i : in std_logic; --тактовый сигнал
+		rst_i : in std_logic; --сброс
 
 		--to memory
-		data_i : in std_logic_vector(7 downto 0);
-		pull_o : out std_logic;
+		data_i : in std_logic_vector(7 downto 0); --входные данные сообщения, sha1 которого вычисляется
+		pull_o : out std_logic; --сигнал запроса входных данных
 
 		--to sha-1
-		data_ready_i : in std_logic;
-		data_valid_o : out std_logic;
-		msg_block_o : out std_logic_vector(511 downto 0);
+		data_ready_i : in std_logic;  --сигнал готовности считать блок обработанных данных. 
+		data_valid_o : out std_logic; --сигнал валидности блока обработанных данных. Если в 1 вместе с data_ready_i, данные считаются считанными
+		msg_block_o : out std_logic_vector(511 downto 0); --блок обработанных данных
 
 		--to top module
-		start_i : in std_logic;
-		msg_length_i : in integer; --in bytes
-		ready_o : out std_logic		
+		start_i : in std_logic; --сигнал запуска препроцессирования данных (и запуска вычисления sha1)
+		msg_length_i : in integer; --длина сообщения, in bytes
+		ready_o : out std_logic --сигнал готовности загружать новые данные
 	);
 end sha1_loader;
 

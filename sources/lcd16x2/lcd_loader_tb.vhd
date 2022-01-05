@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Fri Dec 31 13:35:50 2021
--- Last update : Fri Dec 31 14:10:42 2021
+-- Last update : Wed Jan  5 23:14:34 2022
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -17,6 +17,8 @@
 -- Revisions:  Revisions and documentation are controlled by
 -- the revision control system (RCS).  The RCS should be consulted
 -- on revision history.
+
+--Тестбенч для lcd_loader. Проверка работоспособности модуля осуществляется по wave-формам. Модуль должен загружать данные в LCD, если data_type_i "01" или "10" - переодически, проматывая бегущей строкой на экране значения хэшей.
 -------------------------------------------------------------------------------
 
 library ieee;

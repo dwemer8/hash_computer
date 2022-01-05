@@ -16,6 +16,7 @@
 -- Revision 0.01 - File Created
 -- Additional Comments:
 -- 
+-- Модифицированное FIFO. Если pop и push в 1 одновременно, то, если FIFO пусто, то на выход передаются входные данные, если же нет, то данные в памяти, а на их место загружаются новые.
 ----------------------------------------------------------------------------------
 
 
@@ -28,19 +29,19 @@ use work.fifo_mod_pkg.all;
 
 entity FIFO_8x10240_mod is
     generic(
-        DATA_WIDTH      : integer := 8
+        DATA_WIDTH      : integer := 8 --Ширина байта данных
     );
     Port (
-        clk     : in  STD_LOGIC;
-        rst     : in  STD_LOGIC;
-        rAddrRst : in std_logic;
-        rStartSet : in std_logic;
-        dataIn  : in  STD_LOGIC_VECTOR (DATA_WIDTH - 1 downto 0);
-        dataOut : out STD_LOGIC_VECTOR (DATA_WIDTH - 1 downto 0);
-        push    : in  STD_LOGIC;
-        pop     : in  STD_LOGIC;
-        isFull  : out STD_LOGIC;
-        isEmpty : out STD_LOGIC
+        clk     : in  STD_LOGIC; --тактовый сигнал
+        rst     : in  STD_LOGIC; --сигнал сброса
+        rAddrRst : in std_logic; --сигнал сброса адреса чтения до StartAddr. Нужен для запуска вычисления нового хеша
+        rStartSet : in std_logic; --сигнал установки StartAddr на текущий адрес чтения.
+        dataIn  : in  STD_LOGIC_VECTOR (DATA_WIDTH - 1 downto 0); --входные данные
+        dataOut : out STD_LOGIC_VECTOR (DATA_WIDTH - 1 downto 0); --выходные данные
+        push    : in  STD_LOGIC; --сигнал для загрузки данных
+        pop     : in  STD_LOGIC; --сигнал для считывания данных
+        isFull  : out STD_LOGIC; --сигнал заполненности FIFO
+        isEmpty : out STD_LOGIC --сигнал пустоты FIFO
     );
 end FIFO_8x10240_mod;
 

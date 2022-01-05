@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Tue Dec 14 11:12:16 2021
--- Last update : Tue Dec 14 23:14:09 2021
+-- Last update : Thu Jan  6 00:00:30 2022
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -17,6 +17,8 @@
 -- Revisions:  Revisions and documentation are controlled by
 -- the revision control system (RCS).  The RCS should be consulted
 -- on revision history.
+
+--Тестбенч для sha1_loader. Проверяет правильность препроцессирования сообщений различной длины.
 -------------------------------------------------------------------------------
 
 library ieee;

@@ -1,3 +1,5 @@
+--Тестбенч для SHA1_core и sha1_loader. Проверяет правильность вычисления sha1 сообщений различной длины.
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;

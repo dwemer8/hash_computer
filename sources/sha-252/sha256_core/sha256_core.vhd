@@ -14,9 +14,9 @@ use work.sha256_core_functions.all;
 
 entity sha256_core is
 	port(
-		clk    : in std_logic;
-		reset  : in std_logic;
-		enable : in std_logic;
+		clk    : in std_logic; --тактовый сигнал
+		reset  : in std_logic; --сигнал сброса
+		enable : in std_logic; --сигнал работы модуля. 1 - вычисления идут, 0 - нет
 
 		ready  : out std_logic; -- Ready to process the next block
 		update : in  std_logic; -- Start processing the next block
@@ -24,7 +24,7 @@ entity sha256_core is
 		-- Connections to the input buffer; we assume block RAM that presents
 		-- valid data the cycle after the address has changed:
 		word_address : out std_logic_vector(3 downto 0); -- Word 0 .. 15
-		word_input   : in std_logic_vector(31 downto 0);
+		word_input   : in std_logic_vector(31 downto 0); -- входное слово из блока данных сообщения
 
 		-- Intermediate/final hash values:
 		hash_output : out std_logic_vector(255 downto 0);

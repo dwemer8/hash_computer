@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Mon Dec 13 15:31:22 2021
--- Last update : Tue Dec 14 22:22:40 2021
+-- Last update : Wed Jan  5 23:49:58 2022
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -17,6 +17,8 @@
 -- Revisions:  Revisions and documentation are controlled by
 -- the revision control system (RCS).  The RCS should be consulted
 -- on revision history.
+
+--Тестбенч для SHA1_core. Проверяет правильность вычисления sha1 для тестовой строки.
 -------------------------------------------------------------------------------
 
 library ieee;

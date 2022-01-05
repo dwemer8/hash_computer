@@ -1,3 +1,5 @@
+--Модуль препроцессирования данных и их загрузки в sha256_core для вычисления sha256.
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use ieee.numeric_std.all;
@@ -8,23 +10,23 @@ use work.sha256_loaderAndTb_pkg.all;
 entity sha256_loader is
 	port (
 		--common
-		clk_i : in std_logic;
-		rst_i : in std_logic;
+		clk_i : in std_logic; --тактовый сигнал
+		rst_i : in std_logic; --сброс
 
 		--to memory
-		data_i : in std_logic_vector(7 downto 0);
-		pull_o : out std_logic;
+		data_i : in std_logic_vector(7 downto 0); --данные сообщения, для которого вычисляется sha256
+		pull_o : out std_logic; --сигнал запроса данных
 
 		--to sha256
-		data_ready_i : in std_logic;
-		data_valid_o : out std_logic;
-		word_address_i : in std_logic_vector(3 downto 0);
-		msg_word_o : out std_logic_vector(31 downto 0);
+		data_ready_i : in std_logic; --сигнал готовности считать данные. Если в 1 вместе с data_valid_o, данные считаются считанными
+		data_valid_o : out std_logic; --сигнал актуальности данных. Если в 1 вместе с data_ready_i, данные считаются считанными
+		word_address_i : in std_logic_vector(3 downto 0); --Номер слова в блоке данных сообщения
+		msg_word_o : out std_logic_vector(31 downto 0);  --Слово из блока данных сообщения
 
 		--to top module
-		start_i : in std_logic;
-		msg_length_i : in integer; --in bytes
-		ready_o : out std_logic		
+		start_i : in std_logic; --сигнал запуска препроцессирования данных (и запуска вычисления sha256)
+		msg_length_i : in integer; --длина сообщения, in bytes
+		ready_o : out std_logic	--сигнал готовности загружать новые данные
 	);
 end sha256_loader;
 

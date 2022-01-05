@@ -1,3 +1,5 @@
+--Тестбенч проверки работоспособности sha256_core и sha256_loader. Проверяет правильность вычисления хешей для сообщений различной длины.
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;

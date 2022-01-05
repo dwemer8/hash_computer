@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Sat Dec  4 17:04:36 2021
--- Last update : Sun Dec  5 19:20:46 2021
+-- Last update : Wed Jan  5 22:46:44 2022
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -17,6 +17,8 @@
 -- Revisions:  Revisions and documentation are controlled by
 -- the revision control system (RCS).  The RCS should be consulted
 -- on revision history.
+
+--Тестбенч для проверки модуля CRC32. Проверяет правильность вычисления суммы для одного сообщения.
 -------------------------------------------------------------------------------
 
 library ieee;

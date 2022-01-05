@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu Dec 30 13:46:43 2021
--- Last update : Thu Dec 30 14:02:23 2021
+-- Last update : Wed Jan  5 23:06:12 2022
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -17,6 +17,8 @@
 -- Revisions:  Revisions and documentation are controlled by
 -- the revision control system (RCS).  The RCS should be consulted
 -- on revision history.
+
+--Тестбенч для проверки lcd_controller. Проверку проводить по соответствию wave-форм документации LCD-модуля.
 -------------------------------------------------------------------------------
 
 library ieee;

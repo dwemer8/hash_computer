@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu Dec  2 10:15:01 2021
--- Last update : Thu Dec  2 23:30:21 2021
+-- Last update : Wed Jan  5 22:34:04 2022
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -17,6 +17,9 @@
 -- Revisions:  Revisions and documentation are controlled by
 -- the revision control system (RCS).  The RCS should be consulted
 -- on revision history.
+
+--Тестбенч для проверки модуля UART_tx. 
+--Проверяет правильность отправки двух посылок.
 -------------------------------------------------------------------------------
 
 library ieee;
