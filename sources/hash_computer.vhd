@@ -35,6 +35,8 @@ library ieee;
             --lcd
             rw_o, rs_o, e_o : out std_logic; --read/write, setup/data, and enable for lcd
 			lcd_data_o      : out std_logic_vector(7 downto 0); --data signals for lcd
+			lcd_power		: out std_logic; --lcd power on/off
+			lcd_backlight	: out std_logic; --lcd backlight on/off
 			--led
 			ready_o : out std_logic --сигнал актуальности вычисленного значения, выводится на светодиод, больше нужен для удобства симуляции
  		);
@@ -132,6 +134,8 @@ library ieee;
 	signal rec, rec_in : rec_type := rst_rec;
 
  begin
+ 	lcd_power <= '1';
+ 	lcd_backlight <= '0';
  
 	signals_cleaning : process(clk_i)
 		variable start_comp_cnt, switch_mode_cnt : integer := 0;

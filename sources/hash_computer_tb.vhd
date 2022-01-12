@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Sun Jan  2 00:28:58 2022
--- Last update : Sun Jan  2 14:18:13 2022
+-- Last update : Wed Jan 12 15:58:05 2022
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -50,6 +50,8 @@ architecture testbench of hash_computer_tb is
 	signal rw_o, rs_o, e_o : std_logic;
 	signal lcd_data_o      : std_logic_vector(7 downto 0);
 	signal ready_o         : std_logic;
+	signal lcd_power : std_logic;
+	signal lcd_backlight : std_logic;
 
 	-- Other constants
 	constant clk_period : time := 20 ns; -- NS
@@ -163,7 +165,9 @@ begin
 			e_o           => e_o,
 			lcd_data_o    => lcd_data_o,
 
-			ready_o       => ready_o
+			ready_o       => ready_o,
+			lcd_power => lcd_power,
+			lcd_backlight => lcd_backlight
 		);
 
 end architecture testbench;
