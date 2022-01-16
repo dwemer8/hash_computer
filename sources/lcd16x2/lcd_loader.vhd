@@ -55,8 +55,8 @@ architecture lcd_loader_arch of lcd_loader is
 	constant ctrl_shift          : STD_LOGIC := '0';
 
 	constant space_code : std_logic_vector(7 downto 0) := b"1111_1110";
-	constant char_delay : integer := 500 * 1000 * clk_freq; -- 0,5 s
-	constant end_delay : integer := 3 * 1000 * 1000 * clk_freq; -- 3 s
+	constant char_delay : integer := 500 * 1000 * clk_freq; -- 0,5 s --for test: 200 * clk_freq;
+	constant end_delay : integer := 3 * 1000 * 1000 * clk_freq; -- 3 s --for test: 600 * clk_freq;
 
 	signal ctrl_reset_n    : STD_LOGIC := '0';
 	signal ctrl_lcd_enable : STD_LOGIC := '0';
@@ -159,21 +159,6 @@ begin
 		var := rec;
 		ctrl_lcd_enable <= '0';
 
-		if (data_valid_i = '1' and rec.ready = '1') then
-			var := rst_rec;
-			var.ready := '1';
-			var.data := data_i;
-			var.data_type := data_type_i;
-			--screenBufLoad(data_i, 0, var.screen_buffer);
-
-			for i in 0 to 31 loop
-				var.screen_buffer(i) := data_i(255 - i*4 downto 252 - i*4);
-			end loop;
-			var.start_shift := 1;
-
-			var.state := screen_loading;
-		end if;	
-
 		case (rec.state) is
 		when screen_loading =>
 			if (ctrl_busy = '0') then
@@ -207,17 +192,19 @@ begin
 				var.delay_cnt := char_delay;
 				--screenBufLoad(rec.data, rec.start_shift, var.screen_buffer);
 
-				for i in 0 to 31 loop
-					var.screen_buffer(i) := rec.data(255 - rec.start_shift*4 - i*4 downto 252 - rec.start_shift*4 - i*4);
-				end loop;
-				var.start_shift := rec.start_shift + 1;
-				var.state := screen_loading;
-
 				case (rec.data_type) is
 				when "00" => --crc32	32 / 4 = 8 characters
 					var.start_shift := 0;
+					--simply waiting
 
 				when "01" => --sha1 	160 / 4 = 40 characters
+					var.state := screen_loading;
+
+					for i in 0 to 31 loop
+						var.screen_buffer(i) := rec.data(255 - rec.start_shift*4 - i*4 downto 252 - rec.start_shift*4 - i*4);
+					end loop;
+					var.start_shift := rec.start_shift + 1;
+
 					if (rec.start_shift = 7) then
 						var.delay_cnt := end_delay;
 					elsif (rec.start_shift = 8) then
@@ -225,6 +212,13 @@ begin
 					end if;
 
 				when "10" => --sha256	256 / 4 = 64 characters
+					var.state := screen_loading;
+					
+					for i in 0 to 31 loop
+						var.screen_buffer(i) := rec.data(255 - rec.start_shift*4 - i*4 downto 252 - rec.start_shift*4 - i*4);
+					end loop;
+					var.start_shift := rec.start_shift + 1;
+
 					if (rec.start_shift = 31) then
 						var.delay_cnt := end_delay;
 					elsif (rec.start_shift = 32) then
@@ -239,6 +233,24 @@ begin
 		when others =>
 			assert false report "Unknown state" severity failure;
 		end case;
+
+		--new data arrived
+		if (data_valid_i = '1' and rec.ready = '1') then
+			var := rst_rec; 
+			var.ready := '1';
+			ctrl_lcd_enable <= '0';
+
+			var.data := data_i;
+			var.data_type := data_type_i;
+			--screenBufLoad(data_i, 0, var.screen_buffer);
+
+			for i in 0 to 31 loop
+				var.screen_buffer(i) := data_i(255 - i*4 downto 252 - i*4);
+			end loop;
+			var.start_shift := 1;
+
+			var.state := screen_loading;
+		end if;	
 
 		rec_in <= var;
 	end process;

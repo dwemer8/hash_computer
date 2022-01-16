@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Fri Dec 31 13:35:50 2021
--- Last update : Wed Jan  5 23:14:34 2022
+-- Last update : Sun Jan 16 19:00:12 2022
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -79,8 +79,9 @@ begin
 	process
 	begin
 		wait for clk_period*2;
-
 		wait until data_ready_o = '1';
+
+		---crc32---------------------------------------------------------------------
 		wait for clk_period;
 		data_valid_i <= '1';
 		data_type_i <= "00";
@@ -90,6 +91,20 @@ begin
 		wait until lcd_data_o = b"1111_1110"; --space code
 
 		wait for clk_period;
+		wait for 10 ms;
+
+		---sha1---------------------------------------------------------------------
+		wait for clk_period;
+		data_valid_i <= '1';
+		data_type_i <= "01";
+		data_i <= (others => '1');
+		wait for clk_period;  
+		data_valid_i <= '0';
+		wait until rs_o = '0' and rw_o = '0' and lcd_data_o = b"1100_1111"; --address of 32th character on lcd
+
+		wait for clk_period;
+		wait for 30 ms;
+
 		assert false report "SUCCESS" severity failure;
 		wait;
 	end process;
