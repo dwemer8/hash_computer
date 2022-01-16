@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Sun Jan  2 00:28:58 2022
--- Last update : Wed Jan 12 15:58:05 2022
+-- Last update : Sun Jan 16 17:29:40 2022
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -50,8 +50,8 @@ architecture testbench of hash_computer_tb is
 	signal rw_o, rs_o, e_o : std_logic;
 	signal lcd_data_o      : std_logic_vector(7 downto 0);
 	signal ready_o         : std_logic;
-	signal lcd_power : std_logic;
-	signal lcd_backlight : std_logic;
+	signal lcd_power_o : std_logic;
+	signal lcd_backlight_o : std_logic;
 
 	-- Other constants
 	constant clk_period : time := 20 ns; -- NS
@@ -90,15 +90,23 @@ begin
 
 		---crc32---------------------------------------------------------------------
 
-		data_in <= "01010101";
-		uart_rx_i <= '0';
-		wait for uart_period;
-		for i in 0 to data_in'length - 1 loop
-			uart_rx_i <= data_in(i);
+		for byte_cnt in 0 to 1 loop
+			case (byte_cnt) is
+			when 0 =>
+				data_in <= "01010101";
+			when others =>
+				data_in <= "00001111";
+			end case;
+
+			uart_rx_i <= '0';
+			wait for uart_period;
+			for i in 0 to data_in'length - 1 loop
+				uart_rx_i <= data_in(i);
+				wait for uart_period;
+			end loop;
+			uart_rx_i <= '1';
 			wait for uart_period;
 		end loop;
-		uart_rx_i <= '1';
-		wait for uart_period;
 
 		start_comp_i <= '1';
 		wait for clk_period * clearing_delay;
@@ -166,8 +174,8 @@ begin
 			lcd_data_o    => lcd_data_o,
 
 			ready_o       => ready_o,
-			lcd_power => lcd_power,
-			lcd_backlight => lcd_backlight
+			lcd_power_o => lcd_power_o,
+			lcd_backlight_o => lcd_backlight_o
 		);
 
 end architecture testbench;

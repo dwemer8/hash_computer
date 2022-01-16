@@ -35,8 +35,8 @@ library ieee;
             --lcd
             rw_o, rs_o, e_o : out std_logic; --read/write, setup/data, and enable for lcd
 			lcd_data_o      : out std_logic_vector(7 downto 0); --data signals for lcd
-			lcd_power		: out std_logic; --lcd power on/off
-			lcd_backlight	: out std_logic; --lcd backlight on/off
+			lcd_power_o		: out std_logic; --lcd power on/off
+			lcd_backlight_o	: out std_logic; --lcd backlight on/off
 			--led
 			ready_o : out std_logic --сигнал актуальности вычисленного значения, выводится на светодиод, больше нужен для удобства симуляции
  		);
@@ -134,8 +134,8 @@ library ieee;
 	signal rec, rec_in : rec_type := rst_rec;
 
  begin
- 	lcd_power <= '1';
- 	lcd_backlight <= '0';
+ 	lcd_power_o <= '1';
+ 	lcd_backlight_o <= '0';
  
 	signals_cleaning : process(clk_i)
 		variable start_comp_cnt, switch_mode_cnt : integer := 0;
@@ -175,7 +175,7 @@ library ieee;
 		end if;
 	end process;
 
-	process(clk_i)
+	sync: process(clk_i)
 	begin
 		if (rising_edge(clk_i)) then
 			if (rst_i = '1') then
@@ -187,7 +187,7 @@ library ieee;
 		end if;
 	end process;
 
-	process(rec, 
+	async: process(rec, 
 			rst_i, clear_start_comp, clear_switch_mode, 
 			rx_busy, tx_busy, 
 			fifo_isEmpty, 
@@ -355,6 +355,7 @@ library ieee;
 
 				fifo_rStartSet <= '1';
 				var.lcd_cnt := 0;
+				var.msg_length := 0;
 				var.state := retranslation;
 			end if;
 
